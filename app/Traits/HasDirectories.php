@@ -2,84 +2,133 @@
 
 namespace App\Traits;
 
+use App\Support\DirectoryManager;
+use Directory;
+
 trait HasDirectories
 {
-    protected $testEnvDir;
-    protected $inputDirectory;
-    protected $outputDirectory;
-    protected $version;
-    protected $codeIgnatorVersion;
+    private string $testEnvDir = '';
+    private string $codeIgnitorVersion = '';
 
-    public function setTestEnvDir($testEnvDir)
+    public function setCodeIgniterVersion(string $version): bool
     {
-        $this->testEnvDir = rtrim(str_replace(['/', '\\'], '\\', $testEnvDir), '\\');
+        $this->codeIgnitorVersion = $version;
+        return true;
     }
 
-    public function setInputDirectory($inputDirectory)
+    public function getCodeIgniterVersion(): string
     {
-        if (!empty($this->testEnvDir)) {
-            $path = $this->testEnvDir . '\\' . ltrim($inputDirectory, '\\/');
-        } else {
+        return $this->codeIgnitorVersion;
+    }
+
+    public function setTestEnvDir(string $testEnvDir): void
+    {
+        $this->testEnvDir = $this->normalizePath($testEnvDir);
+    }
+
+    public function setInputDirectory(string $inputDirectory): bool
+    {
+        if ($this->isAbsolutePath($inputDirectory)) {
             $path = $inputDirectory;
+        } else {
+            $path = $this->prependTestEnvDir($inputDirectory);
         }
-        $this->inputDirectory = rtrim(str_replace(['/', '\\'], '\\', $path), '\\');
+        DirectoryManager::getInstance()->setInputDirectory($path);
+        return true;
     }
 
-    public function setOutputDirectory($outputDirectory)
+    public function setOutputDirectory(string $outputDirectory): bool
     {
-        if (!empty($this->testEnvDir)) {
-            $path = $this->testEnvDir . '\\' . ltrim($outputDirectory, '\\/');
-        } else {
+        if ($this->isAbsolutePath($outputDirectory)) {
             $path = $outputDirectory;
-        }
-        $this->outputDirectory = rtrim(str_replace(['/', '\\'], '\\', $path), '\\');
-    }
-
-    public function getInputDirectory()
-    {
-        return $this->inputDirectory;
-    }
-
-    public function getOutputDirectory()
-    {
-        return $this->outputDirectory;
-    }
-    public function getCISystemDirectory()
-    {
-        return  rtrim($this->inputDirectory, '/\\') . DIRECTORY_SEPARATOR . 'system';
-    }
-    public function getCICoreDirectory()
-    {
-        return $this->getCISystemDirectory() . DIRECTORY_SEPARATOR . 'core';
-    }
-    public function getCICompatDirectory()
-    {
-        return  $this->getCICoreDirectory() . DIRECTORY_SEPARATOR . 'compat';
-    }
-    protected function getCIProjectDirectory()
-    {
-        if ($this->getCodeIgniterVersion() == 'CI4') {
-            $path = $this->inputDirectory . DIRECTORY_SEPARATOR . 'app';
         } else {
-            $path = $this->inputDirectory . DIRECTORY_SEPARATOR . 'application';
+            $path = $this->prependTestEnvDir($outputDirectory);
         }
-
-        return $path;
+        DirectoryManager::getInstance()->setOutputDirectory($path);
+        return true;
     }
 
-    public function setCodeIgniterVersion($version)
+    public function getInputDirectory(): string
     {
-        $this->codeIgnatorVersion = $version;
+        $path = DirectoryManager::getInstance()->getInputDirectory();
+        return  $path;
+    }
+
+    public function getOutputDirectory(): string
+    {
+        return DirectoryManager::getInstance()->getOutputDirectory();
+    }
+
+    public function getCISystemDirectory(): string
+    {
+        return $this->normalizePath($this->getInputDirectory() . DIRECTORY_SEPARATOR . 'system');
+    }
+
+    public function getCICoreDirectory(): string
+    {
+        return $this->normalizePath($this->getCISystemDirectory() . DIRECTORY_SEPARATOR . 'core');
+    }
+
+    public function getCICompatDirectory(): string
+    {
+        return $this->normalizePath($this->getCICoreDirectory() . DIRECTORY_SEPARATOR . 'compat');
+    }
+
+    public function getCIProjectDirectory(): string
+    {
+        $folder = $this->getCodeIgniterVersion() === 'CI4' ? 'app' : 'application';
+        DirectoryManager::getInstance()->setCIProjectDirectory($folder);
+        return DirectoryManager::getInstance()->getCIProjectDirectory();
+    }
+
+    public function getCIConfigDirectory(): string
+    {
+        return $this->normalizePath($this->getCIProjectDirectory() . DIRECTORY_SEPARATOR . 'config');
+    }
+
+    public function getCIConfigFile(): string
+    {
+        return $this->normalizePath($this->getCIConfigDirectory() . DIRECTORY_SEPARATOR . 'config.php');
+    }
+
+    public function getCIDataBaseFile(): string
+    {
+        return $this->normalizePath($this->getCIConfigDirectory() . DIRECTORY_SEPARATOR . 'database.php');
+    }
+    public function setLaravelProjectName(string $projectName)
+    {
+        DirectoryManager::getInstance()->setLaravelProjectName($projectName);
+        return true;
     }
 
 
-    public function getCodeIgniterVersion()
+    public function getLaravelProjectDirectory(): string
     {
-        return $this->codeIgnatorVersion;
+        return  $this->normalizePath(
+            $this->getOutputDirectory() . DIRECTORY_SEPARATOR . DirectoryManager::getInstance()->getLaravelProjectName()
+        );
     }
-    
-    protected function getLaravelConfigPath($projectName)
+
+    public function getLaravelENVFile(): string
     {
-        return $this->outputDirectory . DIRECTORY_SEPARATOR . $projectName;
+        return $this->normalizePath($this->getLaravelProjectDirectory() . DIRECTORY_SEPARATOR . '.env');
+    }
+
+    protected function normalizePath(string $path): string
+    {
+        return rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path), DIRECTORY_SEPARATOR);
+    }
+
+    protected function prependTestEnvDir(string $path): string
+    {
+        $normalized = ltrim($path, '/\\');
+        return !empty($this->testEnvDir)
+            ? $this->normalizePath($this->testEnvDir . DIRECTORY_SEPARATOR . $normalized)
+            : $this->normalizePath($normalized);
+    }
+    protected function isAbsolutePath(string $path): bool
+    {
+        // Handles Windows (C:\...) and Unix (/...)
+        return preg_match('/^(?:[a-zA-Z]:)?[\/\\\\]/', $path) === 1;
     }
 }

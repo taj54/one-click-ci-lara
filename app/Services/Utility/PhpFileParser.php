@@ -34,7 +34,7 @@ class PhpFileParser
         }
 
         try {
-            $parser = (new ParserFactory())->createForHostVersion();
+            $parser = (new ParserFactory())->createForHostVersion(); //their is other option to select particular version
             $ast = $parser->parse($code);
 
             $visitor = new GenericNodeVisitor($processor); // Use the generic visitor with the specific processor

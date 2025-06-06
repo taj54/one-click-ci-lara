@@ -2,29 +2,25 @@
 
 namespace App\Services;
 
+use App\Traits\HasDirectories;
+
 class FileHandlerService
 {
-    use \App\Traits\HasDirectories;
-    public $logService;
+    use HasDirectories;
 
-    /**
-     * FileHandlerService constructor.
-     */
+    protected LogService $logService;
+
     public function __construct(LogService $logService)
     {
         $this->logService = $logService;
-        // $this->testEnvDir = rtrim('C:/Migration helper apps/test-environment', DIRECTORY_SEPARATOR);
     }
-
 
     /**
      * Check if the input directory is set (not empty).
-     *
-     * @return bool
      */
-    public function emptyCheckInputDirectory()
+    public function emptyCheckInputDirectory(): bool
     {
-        if (empty($this->inputDirectory)) {
+        if (empty($this->getOutputDirectory())) {
             $this->logService->error("Error: The --path option is required.");
             return false;
         }
@@ -32,28 +28,23 @@ class FileHandlerService
     }
 
     /**
-     * Display the current input and output directory paths in the logService.
-     *
-     * @return void
+     * Display the current input and output directory paths.
      */
-    public function displayDirectories()
+    public function displayDirectories(): void
     {
-        $this->logService->info("\nInput Directory: {$this->inputDirectory}");
-        $this->logService->info("Output Directory: {$this->outputDirectory}\n");
+        $this->logService->info("\nInput Directory: {$this->getInputDirectory()}");
+        $this->logService->info("Output Directory: {$this->getOutputDirectory()}\n");
     }
 
     /**
-     * Check if the input directory (and optionally a required file) exists.
-     *
-     * @param string $requiredFile Optional file to check for in the input directory.
-     * @return bool
+     * Check if the input directory exists, and optionally a required file within it.
      */
-    public function inputDirectoryPathCheck($requiredFile = '')
+    public function inputDirectoryPathCheck(string $requiredFile = ''): bool
     {
-        $result = $this->fileExistsInDirectory($this->inputDirectory, $requiredFile);
+        $result = $this->fileExistsInDirectory($this->getInputDirectory(), $requiredFile);
 
         if (!$result['exists']) {
-            if (!empty($requiredFile)) {
+            if ($requiredFile !== '') {
                 $this->logService->error("Error: The required file '{$requiredFile}' was not found at: {$result['expected_path']}");
             } else {
                 $this->logService->error("Error: The specified input directory does not exist: {$result['expected_path']}");
@@ -61,21 +52,18 @@ class FileHandlerService
             return false;
         }
 
-        // $this->logService->info("Input directory check passed: {$result['expected_path']}");
         return true;
     }
 
     /**
      * Check if a file or directory exists in the specified directory.
      *
-     * @param string $directory
-     * @param string $fileName
-     * @return array
+     * @return array{type: string, folder: string, file: string, expected_path: string, exists: bool}
      */
-    public function fileExistsInDirectory($directory, $fileName = '')
+    public function fileExistsInDirectory(string $directory, string $fileName = ''): array
     {
         $expectedPath = rtrim($directory, DIRECTORY_SEPARATOR);
-        if (!empty($fileName)) {
+        if ($fileName !== '') {
             $expectedPath .= DIRECTORY_SEPARATOR . $fileName;
         }
         $exists = file_exists($expectedPath);
@@ -91,13 +79,11 @@ class FileHandlerService
 
     /**
      * Validate that the input directory exists and is a directory.
-     *
-     * @return bool
      */
-    public function isInputDirectoryValid()
+    public function isInputDirectoryValid(): bool
     {
-        if (!is_dir($this->inputDirectory)) {
-            $this->logService->error("Error: The specified input directory is not valid: {$this->inputDirectory}");
+        if (!is_dir($this->getInputDirectory())) {
+            $this->logService->error("Error: The specified input directory is not valid: {$this->getInputDirectory()}");
             return false;
         }
         return true;
@@ -105,13 +91,11 @@ class FileHandlerService
 
     /**
      * Ensure the output directory exists or can be created.
-     *
-     * @return bool
      */
-    public function isOutputDirectoryMakeValid()
+    public function isOutputDirectoryMakeValid(): bool
     {
         if (!$this->ensureOutputDirectoryExists()) {
-            $this->logService->error("Error: Could not create output directory: {$this->outputDirectory}");
+            $this->logService->error("Error: Could not create output directory: {$this->getOutputDirectory()}");
             return false;
         }
         return true;
@@ -119,29 +103,28 @@ class FileHandlerService
 
     /**
      * Create the output directory if it does not exist.
-     *
-     * @return bool
+     * If directory exists, auto-increment the last part until an available directory is found.
      */
-    public function ensureOutputDirectoryExists()
+    public function ensureOutputDirectoryExists(): bool
     {
-        $outputDir = $this->outputDirectory;
+        $outputDir = $this->getOutputDirectory();
 
-        // If directory exists, increment the last part
         while (is_dir($outputDir)) {
             $parts = explode(DIRECTORY_SEPARATOR, $outputDir);
             $last = array_pop($parts);
 
-            // Check if last part ends with a number, increment it, else add _1
             if (preg_match('/^(.*?)(_(\d+))?$/', $last, $matches)) {
                 $base = $matches[1];
-                $num = isset($matches[3]) ? (int)$matches[3] + 1 : 1;
+                $num = isset($matches[3]) ? ((int)$matches[3] + 1) : 1;
                 $last = "{$base}_{$num}";
             }
             $parts[] = $last;
             $outputDir = implode(DIRECTORY_SEPARATOR, $parts);
         }
+        // Update the outputDirectory property with the new path
+        $this->setOutputDirectory($outputDir);
 
-        $this->outputDirectory = $outputDir;
-        return mkdir($this->outputDirectory,  0777, true);
+
+        return mkdir($outputDir, 0777, true);
     }
 }

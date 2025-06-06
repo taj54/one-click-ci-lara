@@ -30,12 +30,14 @@ class CodeIgniterMigrationService
 
     public function migrate()
     {
+    
         $codeIgnatorVersion = $this->getCodeIgniterVersion();
         if (empty($codeIgnatorVersion)) {
             $this->getCodeIgniterVersionFromFile();
             $codeIgnatorVersion = $this->getCodeIgniterVersion();
-            $this->logService->info("CodeIgniter version is {$codeIgnatorVersion}");
         }
+        $this->logService->info("CodeIgniter version is {$codeIgnatorVersion}");
+
         // Now branch your migration logic based on the detected version
         switch ($codeIgnatorVersion) {
             case 'CI2':
@@ -62,10 +64,6 @@ class CodeIgniterMigrationService
      */
     public function getCodeIgniterVersionFromFile()
     {
-        //old method used before traits
-        // $systemPath = rtrim($this->inputDirectory, '/\\') . DIRECTORY_SEPARATOR . 'system';
-        // $corePath = $systemPath . DIRECTORY_SEPARATOR . 'core';
-        // $compatPath = $corePath . DIRECTORY_SEPARATOR . 'compat';
         $corePath = $this->getCICoreDirectory();
         $compatPath = $this->getCICompatDirectory();
 
@@ -143,10 +141,8 @@ class CodeIgniterMigrationService
      */
     public function convertCI3ConfigToLaravel()
     {
-        $ciConfigPath = $this->getCIProjectDirectory();
-
-        if (!$this->checkCI3ConfigExists($ciConfigPath . DIRECTORY_SEPARATOR . 'config\config.php')) {
-            $this->logService->error("CodeIgniter config.php not found at: $ciConfigPath");
+        if (!$this->checkCI3ConfigExists($this->getCIConfigFile())) {
+            $this->logService->error("CodeIgniter config.php not found at:".$this->getCIConfigFile());
             return;
         }
 
@@ -155,17 +151,18 @@ class CodeIgniterMigrationService
         $this->logService->info("Selected Laravel Version: $laravelVersion");
         $installSail = $this->promptService->promptForSailInstall();
 
-        // Use the new service for project creation and env setup
-        [$projectPath, $envPath] = $this->laravelProjectSetupService->createAndSetupProject(
-            $this->outputDirectory,
+        $this->laravelProjectSetupService->setLaravelProjectName($projectName);
+
+
+        $this->laravelProjectSetupService->createAndSetupProject(
             $projectName,
             $laravelVersion,
-            $installSail
+            $installSail,
         );
 
-        $laravelConfigPath = $this->getLaravelConfigPath($projectName);
-        // $this->ci3ConverterService->getLaravelConfigPath($projectName);
-        $this->ci3ConverterService->convert($ciConfigPath, $laravelConfigPath);
+        // $this->ci3ConverterService->setLaravelProjectDirectory($projectName);
+        $laravelConfigPath = $this->ci3ConverterService->getLaravelProjectDirectory();
+        $this->ci3ConverterService->convert();
     }
 
 

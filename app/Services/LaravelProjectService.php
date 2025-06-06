@@ -2,17 +2,21 @@
 
 namespace App\Services;
 
+use App\Traits\HasDirectories;
+use App\Traits\HasStatusBar;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Str; // Assuming Laravel's Str helper is available
 
 class LaravelProjectService
 {
-    protected LogService $logService;
+    use HasDirectories, HasStatusBar;
+    protected  $logService;
 
-    public function __construct(LogService $logService)
+    public function __construct(LogService $logService, StatusBarService $statusBarService)
     {
         $this->logService = $logService;
+        $this->setStatusBar($statusBarService);
     }
 
     /**
@@ -24,65 +28,48 @@ class LaravelProjectService
      * @param bool $installSail Whether to install Laravel Sail after project creation.
      * @return void
      */
-    public function createLaravelProject(string $outputDirectory, string $projectName, string $laravelVersion, bool $installSail): void
+    public function createLaravelProject(string $projectName, string $laravelVersion, bool $installSail): void
     {
-        $outputDir = Str::finish($outputDirectory, DIRECTORY_SEPARATOR);
-        $projectPath = $outputDir . $projectName;
+        $outputDir = $this->getOutputDirectory();
+        $projectPath = $this->getLaravelProjectDirectory();
 
-        // 1. Ensure the output directory exists
         if (!is_dir($outputDir)) {
-            $this->logService->error("Output directory '{$outputDir}' does not exist. Please create it or set a valid output directory.");
+            $this->logService->error("Output directory : '{$outputDir}' does not exist. Please create it or set a valid output directory.");
             return;
         }
 
-        // 2. Check if Composer is available
         if (!$this->isComposerAvailable()) {
             $this->logService->error("Composer is not found in your system's PATH. Please install Composer or ensure it's accessible.");
             return;
         }
 
-        // 3. Define the Composer command to create the project
         $command = [
             'composer',
             'create-project',
             "laravel/laravel={$laravelVersion}",
             $projectName,
-            // '--prefer-dist', // Faster installation by downloading archives
-            // '--no-interaction', // Do not ask any interactive questions
         ];
 
-        $this->logService->comment("Attempting to create Laravel project '{$projectName}' in directory: {$outputDir}");
+        $this->logService->comment("Attempting to create Laravel project '{$projectName}' in directory: {$outputDir} ");
+        $this->statusBar()->start("Creating Laravel project '{$projectName}'...", 100);
+        $onProgress = function ($buffer) {
+            // Advance the progress bar by a small amount for each buffer received
+            $this->statusBar()->advance('Installing dependencies...');
+        };
+        $isLaravelCreateProject = $this->runProcess($command, $outputDir, "Failed to create Laravel project '{$projectName}'", $onProgress, 10 * 60);
 
-        // 4. Execute the Composer command
-        // Modified to capture output even on success for better debugging
-        list($success, $output, $errorOutput) = $this->runProcess($command, $outputDir, "Failed to create Laravel project '{$projectName}'",5*60);
-
-        if (!$success) {
-            // runProcess already logged the error, just return
+        if (!$isLaravelCreateProject) {
+            $this->statusBar()->error('Failed to create Laravel project.');
             return;
         }
-
+        $this->statusBar()->finish('Laravel project created.');
         $this->logService->info("Laravel project '{$projectName}' created successfully.");
 
-        // 5. Verify project directory exists after creation
-        if (!is_dir($projectPath)) {
-            // If the directory is not found despite Composer reporting success, log detailed output
-            $this->logService->error(
-                "Project directory '{$projectPath}' not found after creation, " .
-                    "despite Composer command reporting success. " .
-                    "This might indicate a permissions issue, an external factor preventing directory creation, " .
-                    "or an unusual Composer behavior.\n" .
-                    "Composer Output:\n" . $output . "\n" .
-                    "Composer Error Output:\n" . $errorOutput
-            );
-            return;
-        }
-
-        // 6. Optionally install Sail
         if ($installSail) {
-            $this->installSail($projectPath); // Pass the actual project path
+            $this->installSail($projectPath);
         }
     }
+
 
     /**
      * Installs Laravel Sail within the given project directory.
@@ -98,19 +85,19 @@ class LaravelProjectService
             'php',
             'artisan',
             'sail:install',
-            // '--with=mysql,redis,meilisearch,mailpit,selenium', // Example services, can be customized
-            // '--no-interaction', // Do not ask any interactive questions
         ];
+        $this->statusBar()->start("Installing Laravel Sail...", 20);
+        $onProgress = function ($buffer) {
+            $this->statusBar()->advance('Running sail:install...');
+        };
 
-        // Ensure the process runs within the project directory
-        // Modified to capture output even on success for better debugging
-        list($success, $output, $errorOutput) = $this->runProcess($command, $projectPath, "Failed to install Laravel Sail in '{$projectPath}'",5*60);
+        $isSailInstallRun = $this->runProcess($command, $projectPath, "Failed to install Laravel Sail in '{$projectPath}'", $onProgress);
 
-        if (!$success) {
-            // runProcess already logged the error, just return
+        if (!$isSailInstallRun) {
+            $this->statusBar()->error('Failed to install Sail.');
             return; // Exit if Sail installation failed
         }
-
+        $this->statusBar()->finish('Laravel Sail installed.');
         $this->logService->info("Laravel Sail installed successfully.");
     }
 
@@ -121,26 +108,27 @@ class LaravelProjectService
      * @param string $cwd The working directory for the command.
      * @param string $failureMessage A message to log if the command fails.
      * @param int $timeout The timeout for the process in seconds.
-     * @return array Returns [bool success, string output, string errorOutput].
+     * @return bool True on success, false on failure.
      */
-    protected function runProcess(array $command, string $cwd, string $failureMessage, int $timeout = 60): array
+    protected function runProcess(array $command, string $cwd, string $failureMessage, ?callable $onProgress = null, int $timeout = 60)
     {
         $process = new Process($command, $cwd, null, null, $timeout);
 
-        $this->logService->comment("Running command: " . implode(' ', $command) . " in directory: {$cwd}");
+        $this->logService->comment("\nRunning command: " . implode(' ', $command) . " in directory: {$cwd}..");
 
         try {
-            $process->run(); // This will capture output internally
+            $process->run(function ($type, $buffer) use ($onProgress) {
+                if ($onProgress) {
+                    $onProgress($buffer);
+                }
+            });
 
             if (!$process->isSuccessful()) {
-                // If the process was not successful, throw an exception
                 throw new ProcessFailedException($process);
             }
 
-            // If successful, return true and the captured output
-            return [true, $process->getOutput(), $process->getErrorOutput()];
+            return true;
         } catch (ProcessFailedException $exception) {
-            // Log the detailed error from the exception
             $this->logService->error(
                 "{$failureMessage}.\n" .
                     "Command: " . $exception->getProcess()->getCommandLine() . "\n" .
@@ -148,12 +136,10 @@ class LaravelProjectService
                     "Error Output:\n" . $exception->getProcess()->getErrorOutput() . "\n" .
                     "Output:\n" . $exception->getProcess()->getOutput()
             );
-            // Return false and the captured output for the caller to handle
-            return [false, $exception->getProcess()->getOutput(), $exception->getProcess()->getErrorOutput()];
+            return false;
         } catch (\Exception $e) {
-            // Catch any other unexpected exceptions
             $this->logService->error("An unexpected error occurred while running command: " . $e->getMessage());
-            return [false, '', 'An unexpected error occurred: ' . $e->getMessage()];
+            return false;
         }
     }
 

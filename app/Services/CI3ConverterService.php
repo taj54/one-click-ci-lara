@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Services\Parsers\NodeProcessors\CIConfigNodeProcessor;
 use App\Services\Parsers\NodeProcessors\CIDatabaseNodeProcessor;
-use App\Services\Utility\PhpFileParser; 
+use App\Services\Utility\PhpFileParser;
 use App\Traits\HasDirectories;
 use RuntimeException;
 
@@ -13,30 +13,27 @@ class CI3ConverterService
     use HasDirectories;
 
     protected LogService $logService;
-    protected PhpFileParser $phpFileParser; // Declare the new dependency
-
-    private const CI_CONFIG_FILE = 'config/config.php';
-    private const CI_DATABASE_FILE = 'config/database.php';
-    private const ENV_FILE = '.env';
+    protected PhpFileParser $phpFileParser;
 
     /**
      * Constructor to initialize the LogService and PhpFileParser.
      */
-    public function __construct(LogService $logService, PhpFileParser $phpFileParser) // Inject PhpFileParser
+    public function __construct(LogService $logService, PhpFileParser $phpFileParser)
     {
         $this->logService = $logService;
-        $this->phpFileParser = $phpFileParser; // Assign the injected parser
+        $this->phpFileParser = $phpFileParser;
     }
 
-    public function convert(string $ciBasePath, string $laravelBasePath): void
+    public function convert()
     {
-        // Ensure BASEPATH is defined for any CI files that might need it
-        if (!defined('BASEPATH')) {
-            define('BASEPATH', true);
-        }
 
-        $this->convertConfigToEnv($ciBasePath, $laravelBasePath);
-        $this->convertDatabaseToEnv($ciBasePath, $laravelBasePath);
+        // Ensure BASEPATH is defined for any CI files that might need it
+        // if (!defined('BASEPATH')) {
+        //     define('BASEPATH', true);
+        // }
+
+        $this->convertConfigToEnv();
+        $this->convertDatabaseToEnv();
     }
 
     /**
@@ -46,15 +43,14 @@ class CI3ConverterService
      * @param string $laravelBasePath The base path to the Laravel application.
      * @return bool True on success, false on failure.
      */
-    public function convertConfigToEnv(string $ciBasePath, string $laravelBasePath): bool
+    public function convertConfigToEnv(): bool
     {
-        $configPath = rtrim($ciBasePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . self::CI_CONFIG_FILE;
         $laravelConfigMap = [];
 
         try {
             /** @var CIConfigNodeProcessor $processor */
             // Use the injected PhpFileParser instance
-            $processor = $this->phpFileParser->parse($configPath, new CIConfigNodeProcessor());
+            $processor = $this->phpFileParser->parse($this->getCIConfigFile(), new CIConfigNodeProcessor());
             $ciConfigValues = $processor->getResults(); // Get results from the processor
 
             // Map CI config values to Laravel .env keys
@@ -64,13 +60,12 @@ class CI3ConverterService
                 'APP_DEBUG' => ($ciConfigValues['debug'] ?? false) ? 'true' : 'false',
                 'APP_URL' => $ciConfigValues['base_url'] ?? 'http://localhost',
             ];
-
         } catch (RuntimeException $e) {
             $this->logService->error("Error converting CI config.php: " . $e->getMessage());
             return false;
         }
 
-        $envPath = rtrim($laravelBasePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . self::ENV_FILE;
+        $envPath = $this->getLaravelENVFile();
         $this->logService->info("Attempting to update .env at: $envPath");
 
         if (!file_exists($envPath)) {
@@ -107,15 +102,14 @@ class CI3ConverterService
      * @return bool True on success, false on failure.
      * @throws RuntimeException If CI3 database.php or Laravel .env file is not found or unreadable.
      */
-    public function convertDatabaseToEnv(string $ciBasePath, string $laravelBasePath): bool
+    public function convertDatabaseToEnv(): bool
     {
-        $ciDatabasePhpPath = rtrim($ciBasePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . self::CI_DATABASE_FILE;
-        $laravelEnvPath = rtrim($laravelBasePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . self::ENV_FILE;
+
 
         try {
             /** @var CIDatabaseNodeProcessor $processor */
             // Use the injected PhpFileParser instance
-            $processor = $this->phpFileParser->parse($ciDatabasePhpPath, new CIDatabaseNodeProcessor());
+            $processor = $this->phpFileParser->parse($this->getCIDataBaseFile(), new CIDatabaseNodeProcessor());
             $dbValues = $processor->getResults(); // Get results from the processor
         } catch (RuntimeException $e) {
             $this->logService->error("Error converting CI database.php: " . $e->getMessage());
@@ -123,7 +117,7 @@ class CI3ConverterService
         }
 
         if (empty($dbValues)) {
-            $this->logService->comment("No \$db['default'] config found in: $ciDatabasePhpPath. Skipping database .env conversion.");
+            $this->logService->comment("No \$db['default'] config found in: " . $this->getCIDataBaseFile() . ". Skipping database .env conversion.");
             return false; // Not necessarily an error, just nothing to convert
         }
 
@@ -138,19 +132,19 @@ class CI3ConverterService
             'DB_CHARSET' => $dbValues['char_set'] ?? 'utf8mb4',
             'DB_COLLATION' => $dbValues['dbcollat'] ?? 'utf8mb4_unicode_ci',
         ];
-
-        $envContent = file_get_contents($laravelEnvPath);
+        $envPath = $this->getLaravelENVFile();
+        $envContent = file_get_contents($envPath);
         if ($envContent === false) {
-            $this->logService->error("Failed to read .env file at: $laravelEnvPath.");
-            throw new RuntimeException("Failed to read .env file at: $laravelEnvPath.");
+            $this->logService->error("Failed to read .env file at:  $envPath.");
+            throw new RuntimeException("Failed to read .env file at:  $envPath.");
         }
 
         foreach ($envUpdates as $key => $value) {
             $envContent = $this->setEnvValue($envContent, $key, $value);
         }
 
-        if (file_put_contents($laravelEnvPath, $envContent) === false) {
-            $this->logService->error("Failed to write to .env file at: $laravelEnvPath.");
+        if (file_put_contents( $envPath, $envContent) === false) {
+            $this->logService->error("Failed to write to .env file at:  $envPath.");
             return false;
         }
 

@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Services\CodeIgniterMigrationService;
 use App\Services\FileHandlerService;
 use App\Services\LogService;
+use App\Services\StatusBarService;
 
 class MigrateCodeIgniterApp extends Command
 {
@@ -14,7 +15,7 @@ class MigrateCodeIgniterApp extends Command
      *
      * @var string
      */
-    protected $signature = 'taj-migrate:ci {--path=} {--output-dir=.}';
+    protected $signature = 'taj-migrate:ci {--path=} {--output-dir=.: Output directory (default: current directory)}';
 
     /**
      * The console command description.
@@ -23,57 +24,59 @@ class MigrateCodeIgniterApp extends Command
      */
     protected $description = 'Migrates a CodeIgniter application to Laravel.';
 
-    protected $migrationService;
-    protected $fileHandlerService;
-    protected $logService;
-
     public function __construct(
-        CodeIgniterMigrationService $migrationService,
-        FileHandlerService $fileHandlerService,
-        LogService $logService // Add this
+        protected CodeIgniterMigrationService $migrationService,
+        protected FileHandlerService $fileHandlerService,
+        protected LogService $logService
     ) {
         parent::__construct();
-        $this->migrationService = $migrationService;
-        $this->fileHandlerService = $fileHandlerService;
-        $this->logService = $logService;
     }
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
-        $testEnvDir = rtrim('C:/Migration helper apps/test-environment/', DIRECTORY_SEPARATOR);
+        $testEnvDir = rtrim('C:/Migration helper apps/test-environment', DIRECTORY_SEPARATOR);
         $inputDirectory = rtrim($this->option('path'), DIRECTORY_SEPARATOR);
         $outputDirectory = rtrim($this->option('output-dir'), DIRECTORY_SEPARATOR);
 
-        // Set up log service with console
-        // Set up file handler with all directories and console
-        // $this->fileHandlerService->console = $this;
-        $this->fileHandlerService->setTestEnvDir($testEnvDir);
-        $this->fileHandlerService->setInputDirectory($inputDirectory);
-        $this->fileHandlerService->setOutputDirectory($outputDirectory);
+        // Setup file handler
+        $this->setupFileHandler($testEnvDir, $inputDirectory, $outputDirectory);
 
-        // Validate all directories in one go
-        if (
-            !$this->fileHandlerService->emptyCheckInputDirectory() ||
-            !$this->fileHandlerService->inputDirectoryPathCheck() ||
-            !$this->fileHandlerService->isInputDirectoryValid() ||
-            !$this->fileHandlerService->isOutputDirectoryMakeValid()
-        ) {
+
+
+        // Validate input/output directories
+        if (!$this->validateDirectories()) {
             return self::FAILURE;
         }
-
-
-        // Set up migration service with required dependencies
-        $this->migrationService->setInputDirectory($this->fileHandlerService->getInputDirectory());
-        $this->migrationService->setOutputDirectory($this->fileHandlerService->getOutputDirectory());
 
         // Run migration
-        if (!$this->migrationService->migrate()) {
-            return self::FAILURE;
-        }
+        return $this->migrationService->migrate()
+            ? self::SUCCESS
+            : self::FAILURE;
+    }
 
-        return self::SUCCESS;
+    /**
+     * Set up file handler service with environment and paths.
+     */
+    protected function setupFileHandler(string $envDir, string $input, string $output): void
+    {
+        $this->fileHandlerService->setTestEnvDir($envDir);
+        $this->fileHandlerService->setInputDirectory($input);
+        $this->fileHandlerService->setOutputDirectory($output);
+        // Optionally pass CLI context to service (if needed)
+        // $this->fileHandlerService->setConsole($this);
+    }
+
+    /**
+     * Validate required input and output directories.
+     */
+    protected function validateDirectories(): bool
+    {
+        return $this->fileHandlerService->emptyCheckInputDirectory()
+            && $this->fileHandlerService->inputDirectoryPathCheck()
+            && $this->fileHandlerService->isInputDirectoryValid()
+            && $this->fileHandlerService->isOutputDirectoryMakeValid();
     }
 }
