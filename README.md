@@ -182,6 +182,6 @@ The CodeIgniter to Laravel Migration Tool is released under the MIT License.
 
 ## Credits
 
-*   The CodeIgniter to Laravel Migration Tool was created by \[Taj\].
+*   The CodeIgniter to Laravel Migration Tool was created by [Taj](https://github.com/taj54) .
     
 *   Special thanks to the open-source community and the creators of nikic/php-parser for their invaluable tools.
