@@ -3,7 +3,7 @@
 namespace App\Services\Parsers\NodeProcessors;
 
 use App\Services\Parsers\AbstractConfigParserVisitor;
-use App\Services\Parsers\Contracts\NodeProcessorInterface;
+use App\Contracts\NodeProcessorInterface;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Scalar;

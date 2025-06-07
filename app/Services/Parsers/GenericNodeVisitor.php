@@ -2,7 +2,7 @@
 
 namespace App\Services\Parsers;
 
-use App\Services\Parsers\Contracts\NodeProcessorInterface;
+use App\Contracts\NodeProcessorInterface;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
 

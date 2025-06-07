@@ -127,4 +127,13 @@ class FileHandlerService
 
         return mkdir($outputDir, 0777, true);
     }
+    public function validateFileExists(string $path): bool
+    {
+        $name = end(explode(DIRECTORY_SEPARATOR, $path));
+        if (!file_exists($path)) {
+            $this->logService->error("{$name} file not found at: {$path}");
+            return false;
+        }
+        return true;
+    }
 }

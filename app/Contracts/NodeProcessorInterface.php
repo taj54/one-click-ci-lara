@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Parsers\Contracts;
+namespace App\Contracts;
 
 use PhpParser\Node;
 

@@ -15,7 +15,7 @@ class MigrateCodeIgniterApp extends Command
      *
      * @var string
      */
-    protected $signature = 'taj-migrate:ci {--path=} {--output-dir=.: Output directory (default: current directory)}';
+    protected $signature = 'taj-migrate:ci {--path=}   {--output-dir=version : Output directory}';
 
     /**
      * The console command description.
@@ -37,12 +37,12 @@ class MigrateCodeIgniterApp extends Command
      */
     public function handle(): int
     {
-        $testEnvDir = rtrim('C:/Migration helper apps/test-environment', DIRECTORY_SEPARATOR);
+        $appPath = base_path();
+        $testEnvDirectory = realpath($appPath . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'test-environment'.DIRECTORY_SEPARATOR);
         $inputDirectory = rtrim($this->option('path'), DIRECTORY_SEPARATOR);
         $outputDirectory = rtrim($this->option('output-dir'), DIRECTORY_SEPARATOR);
-
         // Setup file handler
-        $this->setupFileHandler($testEnvDir, $inputDirectory, $outputDirectory);
+        $this->setupFileHandler($testEnvDirectory, $inputDirectory, $outputDirectory);
 
 
 

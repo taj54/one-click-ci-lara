@@ -4,29 +4,29 @@ A command-line tool designed to automate the migration of CodeIgniter applicatio
 
 ## Table of Contents
 
-*   [Introduction](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.1d46mf1slaxe)
+*   [Introduction](## Introduction)
     
-*   [Features](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.7cry1nim4l24)
+*   [Features]()
     
-*   [Limitations](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.40skx05rdjx6)
+*   [Limitations]()
     
-*   [Requirements](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.x9elv3slr6mv)
+*   [Requirements]()
     
-*   [Installation](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.ii3ri5m4z8po)
+*   [Installation]()
     
-*   [Usage](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.i5vpur4siwki)
+*   [Usage]()
     
-*   [Configuration](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.z92o9wylp9x8)
+*   [Configuration]()
     
-*   [Troubleshooting](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.cjsteq2rrix8)
+*   [Troubleshooting]()
     
-*   [Future Scope](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.w6thk3bn0ldh)
+*   [Future Scope]()
     
-*   [Contributing](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.snfxgb8oia2d)
+*   [Contributing]()
     
-*   [License](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.2duopv23z3kn)
+*   [License]()
     
-*   [Credits](https://docs.google.com/document/d/1diakm2k8WIRN3OWJoQ2lptdEeqWKTH0m1jjufsbgh_c/edit#bookmark=id.9039ue57fper)
+*   [Credits]()
     
 
 ## Introduction
@@ -105,22 +105,24 @@ Instructions for installing the tool will be provided here upon release. Typical
 
 ## Usage
 
-To initiate a migration:
+## Usage
 
-1.  Prepare your CodeIgniter project: Ensure it's in a clean state (e.g., without unnecessary temporary files).
-    
-2.  Run the migration command:  
-    ci-to-laravel-migrate migrate /path/to/your\_codeigniter\_project /path/to/your\_new\_laravel\_project  
-      
-    
+To initiate a migration using the `taj-migrate:ci` command:
 
-*   Replace /path/to/your\_codeigniter\_project with the actual path to your CI project (can be a local directory or a path to a .zip archive).
+1.  **Prepare your CodeIgniter project:** Ensure it's in a clean state (e.g., without unnecessary temporary files).
     
-*   Replace /path/to/your\_new\_laravel\_project with the desired path for the new Laravel project. This directory will be created by the tool.
+2.  **Run the migration command:**
     
-
-3.  Review the Migration Report: Carefully examine the generated report for areas requiring manual attention.
+        php artisan taj-migrate:ci --path=/path/to/your_codeigniter_project --output-dir=/path/to/your_new_laravel_project
+        
     
+    *   Replace `/path/to/your_codeigniter_project` with the actual path to your CI project (can be a local directory ).
+        
+    *   Replace `/path/to/your_new_laravel_project` with the desired path for the new Laravel project. This directory will be created by the tool.
+        
+    *   The `--output-dir` option is optional; if omitted, the new Laravel project will be created in the ../test-environment directory.
+        
+3.  **Review the Migration Report:** Carefully examine the generated report for areas requiring manual attention.
 
 ## Configuration
 

@@ -2,24 +2,26 @@
 
 namespace App\Traits;
 
+use App\Enums\CIVersion;
 use App\Support\DirectoryManager;
 use Directory;
 
 trait HasDirectories
 {
     private string $testEnvDir = '';
-    private string $codeIgnitorVersion = '';
+    private CIVersion $codeIgnitorVersion = CIVersion::UNKNOWN;
 
-    public function setCodeIgniterVersion(string $version): bool
+    public function setCodeIgniterVersion(CIVersion  $version): bool
     {
         $this->codeIgnitorVersion = $version;
         return true;
     }
 
-    public function getCodeIgniterVersion(): string
+    public function getCodeIgniterVersion(): CIVersion 
     {
         return $this->codeIgnitorVersion;
     }
+    
 
     public function setTestEnvDir(string $testEnvDir): void
     {
@@ -112,6 +114,10 @@ trait HasDirectories
     public function getLaravelENVFile(): string
     {
         return $this->normalizePath($this->getLaravelProjectDirectory() . DIRECTORY_SEPARATOR . '.env');
+    }
+    public function getLaravelDataBaseFile(): string
+    {
+        return $this->normalizePath($this->getLaravelProjectDirectory() . DIRECTORY_SEPARATOR . 'config'.DIRECTORY_SEPARATOR.'database.php');
     }
 
     protected function normalizePath(string $path): string

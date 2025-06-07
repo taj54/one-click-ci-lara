@@ -2,7 +2,7 @@
 
 namespace App\Services\Utility;
 
-use App\Services\Parsers\Contracts\NodeProcessorInterface;
+use App\Contracts\NodeProcessorInterface;
 use App\Services\Parsers\GenericNodeVisitor;
 use PhpParser\ParserFactory;
 use PhpParser\NodeTraverser;
