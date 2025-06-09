@@ -9,16 +9,10 @@ use Illuminate\Encryption\Encrypter;
 class LaravelProjectSetupService
 {
     use HasDirectories, HasStatusBar;
-    protected $laravelProjectService;
-    protected $logService;
     private $laravelProjectDirectory;
     private $laravelENVFile;
 
-    public function __construct(LaravelProjectService $laravelProjectService, LogService $logService)
-    {
-        $this->laravelProjectService = $laravelProjectService;
-        $this->logService = $logService;
-    }
+    public function __construct(private LaravelProjectService $laravelProjectService, private LogService $logService) {}
 
     /**
      * Create a new Laravel project and set up its environment.

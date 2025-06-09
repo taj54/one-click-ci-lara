@@ -49,4 +49,37 @@ class PhpFileParser
             throw new RuntimeException("Error parsing PHP file '$filePath': " . $e->getMessage(), 0, $e);
         }
     }
+    /**
+     * Parses multiple files and applies a callable to each processor's results to transform them.
+     *
+     * @param string[] $filePaths
+     * @param callable(): NodeProcessorInterface $processorFactory
+     * @param callable(NodeProcessorInterface, string): mixed|null $resultMapper Optional function to map processor results per file
+     *
+     * @return array{
+     *     success: array<string, mixed>,
+     *     errors: array<string, string>
+     * }
+     */
+    public function parseFilesWithMapping(array $filePaths, callable $processorFactory, ?callable $resultMapper = null): array
+    {
+        $success = [];
+        $errors = [];
+
+        foreach ($filePaths as $filePath) {
+            try {
+                $processor = $processorFactory();
+                $this->parse($filePath, $processor);
+                $mappedResult = $resultMapper ? $resultMapper($processor, $filePath) : $processor;
+                $success[$filePath] = $mappedResult;
+            } catch (\Throwable $e) {
+                $errors[$filePath] = $e->getMessage();
+            }
+        }
+
+        return [
+            'success' => $success,
+            'errors' => $errors,
+        ];
+    }
 }

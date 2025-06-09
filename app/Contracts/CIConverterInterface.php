@@ -4,7 +4,7 @@ namespace App\Contracts;
 
 use App\Enums\CIVersion;
 
-interface CodeIgniterConverterInterface
+interface CIConverterInterface
 {
     public function supports(CIVersion $version): bool;
 

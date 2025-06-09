@@ -2,16 +2,15 @@
 
 namespace App\Services\Parsers\NodeProcessors;
 
-use App\Services\Parsers\AbstractConfigParserVisitor;
 use App\Contracts\NodeProcessorInterface;
+use App\Services\Parsers\AbstractParserVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
-use PhpParser\Node\Scalar;
 
 /**
  * Processes nodes specifically for CodeIgniter's database.php structure.
  */
-class CIDatabaseNodeProcessor extends AbstractConfigParserVisitor implements NodeProcessorInterface
+class CIDatabaseNodeProcessor extends AbstractParserVisitor implements NodeProcessorInterface
 {
     public array $dbConfig = [];
 
@@ -25,28 +24,9 @@ class CIDatabaseNodeProcessor extends AbstractConfigParserVisitor implements Nod
     {
         if (
             $node instanceof Expr\Assign &&
-            $node->var instanceof Expr\ArrayDimFetch &&
-            $node->var->var instanceof Expr\Variable &&
-            $node->var->var->name === 'db' &&
-            $node->var->dim instanceof Scalar\String_ &&
-            $node->var->dim->value === 'default' &&
-            $node->expr instanceof Expr\Array_
+            $this->isNamedNestedArrayAssignment($node, 'db',  ['default'], Expr\Array_::class) 
         ) {
-            foreach ($node->expr->items as $item) {
-                if (!$item->key instanceof Scalar\String_) {
-                    continue;
-                }
-
-                /** @var Scalar\String_ $keyNode */
-                $keyNode = $item->key;
-                $key = $keyNode->value;
-                $value = $this->resolveScalarValue($item->value);
-
-                if ($value === null && !$this->isNullLiteral($item->value)) {
-                    continue;
-                }
-                $this->dbConfig[$key] = $value;
-            }
+            $this->dbConfig = array_merge($this->dbConfig, $this->extractStringArrayItems($node->expr));
         }
     }
 
