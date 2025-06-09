@@ -8,7 +8,12 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 
-class CIRouteNodeProcessor extends AbstractParserVisitor implements NodeProcessorInterface
+
+/**
+ * Base route processor for CI controllers.
+ */
+
+class CIRouteNodeProcessorBase  extends AbstractParserVisitor implements NodeProcessorInterface
 {
     private string $controllerName = '';
     private array $routes = [];

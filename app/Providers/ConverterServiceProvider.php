@@ -6,7 +6,6 @@ use App\Contracts\CIAnalyzerInterface;
 use App\Contracts\CIConverterInterface;
 use App\Contracts\CIMigrationCoordinatorInterface;
 use App\Services\Analyzers\CI3AnalyzerService;
-use App\Services\Analyzers\CIAnalyzerService;
 use App\Services\CodeIgniterMigrationService;
 use App\Services\Converters\CI3ConverterService;
 use App\Services\Coordinators\CI3MigrationCoordinatorService;

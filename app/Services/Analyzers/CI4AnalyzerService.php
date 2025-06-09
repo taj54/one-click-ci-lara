@@ -2,22 +2,21 @@
 
 namespace App\Services\Analyzers;
 
-use App\Contracts\CIAnalyzerInterface;
 use App\Enums\CIVersion;
 use App\Factories\CIControllerProcessorFactory;
 use App\Factories\CIModelProcessorFactory;
 use App\Factories\CIRouteProcessorFactory;
 
-class CI3AnalyzerService extends AbstractCIAnalyzerService implements CIAnalyzerInterface
+class CI4AnalyzerService extends AbstractCIAnalyzerService
 {
     public function supports(CIVersion $version): bool
     {
-        return $version === CIVersion::CI3;
+        return $version === CIVersion::CI4;
     }
 
     protected function getProcessorFactories(): array
     {
-        $version = CIVersion::CI3;
+        $version = CIVersion::CI4;
 
         return [
             'controllers' => CIControllerProcessorFactory::make($version),

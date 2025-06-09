@@ -8,16 +8,16 @@ use App\Factories\CIControllerProcessorFactory;
 use App\Factories\CIModelProcessorFactory;
 use App\Factories\CIRouteProcessorFactory;
 
-class CI3AnalyzerService extends AbstractCIAnalyzerService implements CIAnalyzerInterface
+class CI2AnalyzerService extends AbstractCIAnalyzerService implements CIAnalyzerInterface
 {
     public function supports(CIVersion $version): bool
     {
-        return $version === CIVersion::CI3;
+        return $version === CIVersion::CI2;
     }
 
     protected function getProcessorFactories(): array
     {
-        $version = CIVersion::CI3;
+        $version = CIVersion::CI2;
 
         return [
             'controllers' => CIControllerProcessorFactory::make($version),

@@ -10,13 +10,13 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\PrettyPrinter\Standard;
 
-class CIModelNodeProcessor extends AbstractParserVisitor implements NodeProcessorInterface
+abstract class CIModelNodeProcessorBase extends AbstractParserVisitor implements NodeProcessorInterface
 {
-    private string $className = '';
-    private string $parentClassName = '';
-    private array $methods = [];
-    private array $usedTables = [];
-    private Standard $printer;
+    protected string $className = '';
+    protected string $parentClassName = '';
+    protected array $methods = [];
+    protected array $usedTables = [];
+    protected Standard $printer;
 
     public function __construct()
     {
@@ -27,15 +27,11 @@ class CIModelNodeProcessor extends AbstractParserVisitor implements NodeProcesso
     {
         if ($node instanceof Class_) {
             $this->className = $node->name->name;
-            $this->parentClassName = $node->extends?->toString() ?? null;
+            $this->parentClassName = $node->extends?->toString() ?? '';
         }
 
         if ($node instanceof ClassMethod) {
             $methodName = $node->name->name;
-            if ($methodName === '__construct') {
-                $this->detectUsedTables($node);
-                return;
-            };
             $visibility = $this->getVisibility($node);
             $params = array_map(fn($param) => $param->var->name, $node->params);
             $tables = $this->detectUsedTables($node);
@@ -51,7 +47,6 @@ class CIModelNodeProcessor extends AbstractParserVisitor implements NodeProcesso
                 'extends' => $this->parentClassName,
             ];
 
-            // Collect all unique tables for the whole class
             $this->usedTables = array_merge($this->usedTables, $tables);
         }
     }
@@ -66,7 +61,7 @@ class CIModelNodeProcessor extends AbstractParserVisitor implements NodeProcesso
         ];
     }
 
-    private function detectUsedTables(ClassMethod $method): array
+    protected function detectUsedTables(ClassMethod $method): array
     {
         $tables = [];
         $stmts = $method->getStmts() ?? [];
@@ -74,10 +69,8 @@ class CIModelNodeProcessor extends AbstractParserVisitor implements NodeProcesso
         $this->traverseNodes($stmts, function (Node $node) use (&$tables) {
             if (
                 $node instanceof MethodCall &&
-                //TODO build a seperate db checker in abstractParser
-                $this->isLoadMethodCall($node, ['this' => ['db' => ['get','insert','get_where']]])&&
+                $this->isLoadMethodCall($node, ['this' => ['db' => ['get', 'insert', 'get_where']]]) &&
                 $node->args[0]->value instanceof Node\Scalar\String_
-
             ) {
                 $tables[] = $node->args[0]->value->value;
             }

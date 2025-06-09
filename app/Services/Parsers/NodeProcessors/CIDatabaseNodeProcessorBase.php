@@ -10,7 +10,7 @@ use PhpParser\Node\Expr;
 /**
  * Processes nodes specifically for CodeIgniter's database.php structure.
  */
-class CIDatabaseNodeProcessor extends AbstractParserVisitor implements NodeProcessorInterface
+class CIDatabaseNodeProcessorBase  extends AbstractParserVisitor implements NodeProcessorInterface
 {
     public array $dbConfig = [];
 

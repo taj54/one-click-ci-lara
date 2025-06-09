@@ -6,12 +6,11 @@ use App\Contracts\NodeProcessorInterface;
 use App\Services\Parsers\AbstractParserVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
-use PhpParser\Node\Scalar;
 
 /**
- * Processes nodes specifically for CodeIgniter's config.php structure.
+ * Base config processor shared by all CI versions.
  */
-class CIConfigNodeProcessor extends AbstractParserVisitor implements NodeProcessorInterface
+class CIConfigNodeProcessorBase  extends AbstractParserVisitor implements NodeProcessorInterface
 {
     public array $ciConfig = [];
 

@@ -10,14 +10,13 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\PrettyPrinter\Standard;
 
-class CIControllerNodeProcessor extends AbstractParserVisitor implements NodeProcessorInterface
-
+abstract class CIControllerNodeProcessorBase extends AbstractParserVisitor implements NodeProcessorInterface
 {
-    private string $className = '';
-    private string $parentClassName = '';
-    private array $methods = [];
-    private array $loadedDependencies = [];
-    private Standard $printer;
+    protected string $className = '';
+    protected string $parentClassName = '';
+    protected array $methods = [];
+    protected array $loadedDependencies = [];
+    protected Standard $printer;
 
     public function __construct()
     {
@@ -33,17 +32,17 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
 
         if ($node instanceof ClassMethod) {
             $methodName = $node->name->name;
-            //
+
             if ($methodName === '__construct') {
                 $this->detectDependencyUsage($node);
                 return;
             }
+
             $visibility = $this->getVisibility($node);
             $params = array_map(fn($param) => $param->var->name, $node->params);
             $usedDependencies = $this->detectDependencyUsage($node);
             $viewsUsed = $this->detectViewUsage($node);
             $summary = $this->printer->prettyPrint($node->stmts ?? []);
-
 
             $this->methods[] = [
                 'name' => $methodName,
@@ -59,7 +58,6 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
         }
     }
 
-
     public function getResults(): array
     {
         return [
@@ -68,14 +66,11 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
         ];
     }
 
-
-
-    private function detectDependencyUsage(ClassMethod $method): array
+    protected function detectDependencyUsage(ClassMethod $method): array
     {
         $used = [];
         $stmts = $method->getStmts() ?? [];
 
-        // 1. Detect $this->load->model(), library(), helper()
         $this->traverseNodes($stmts, function (Node $node) use (&$used) {
             if (
                 $node instanceof MethodCall &&
@@ -88,10 +83,8 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
                     return;
                 }
 
-                // Handle helper (no alias)
                 if ($loadType === 'helper') {
                     $arg = $args[0]->value ?? null;
-
                     $helperNames = [];
 
                     if ($arg instanceof Node\Expr\Array_) {
@@ -107,8 +100,6 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
 
                     foreach ($helperNames as $helperName) {
                         $this->registerHelper($helperName);
-
-                        // Inject directly into $used
                         $used[] = [
                             'type' => 'helper',
                             'alias' => $helperName,
@@ -119,7 +110,6 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
                     return;
                 }
 
-                // Handle model / library with optional alias
                 $actualName = $this->getStringValue($args[0]->value ?? null);
                 $alias = $this->getStringValue($args[1]->value ?? null) ?? $actualName;
 
@@ -132,7 +122,6 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
             }
         });
 
-        // 2. Detect usages like $this->alias->method()
         $this->traverseNodes($stmts, function (Node $node) use (&$used) {
             if (
                 $node instanceof Node\Expr\PropertyFetch &&
@@ -162,7 +151,6 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
             }
         });
 
-        // 3. Remove duplicates
         $unique = [];
         foreach ($used as $entry) {
             $key = ($entry['name'] ?? '') . '|' . $entry['alias'];
@@ -172,7 +160,7 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
         return array_values($unique);
     }
 
-    private function detectViewUsage(ClassMethod $method): array
+    protected function detectViewUsage(ClassMethod $method): array
     {
         $viewsUsed = [];
         $stmts = $method->getStmts() ?? [];
@@ -192,7 +180,8 @@ class CIControllerNodeProcessor extends AbstractParserVisitor implements NodePro
 
         return array_unique($viewsUsed);
     }
-    private function registerHelper(string $name): void
+
+    protected function registerHelper(string $name): void
     {
         $this->loadedDependencies[$name] = [
             'type' => 'helper',
