@@ -2,11 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Services\CIMigrationService;
+use App\Services\CLI\CLIMigrationService;
 use Illuminate\Console\Command;
 use App\Services\FileHandlerService;
 use App\Services\LogService;
-use App\Services\StatusBarService;
 
 class MigrateCodeIgniterApp extends Command
 {
@@ -25,7 +24,7 @@ class MigrateCodeIgniterApp extends Command
     protected $description = 'Migrates a CodeIgniter application to Laravel.';
 
     public function __construct(
-        protected CIMigrationService $migrationService,
+        protected CLIMigrationService $migrationService,
         protected FileHandlerService $fileHandlerService,
         protected LogService $logService
     ) {

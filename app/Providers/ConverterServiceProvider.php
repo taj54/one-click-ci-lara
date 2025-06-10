@@ -5,8 +5,9 @@ namespace App\Providers;
 use App\Contracts\CIAnalyzerInterface;
 use App\Contracts\CIConverterInterface;
 use App\Contracts\CIMigrationCoordinatorInterface;
+use App\Services\Abstracts\BaseCIMigrationService;
 use App\Services\Analyzers\CI3AnalyzerService;
-use App\Services\CodeIgniterMigrationService;
+use App\Services\CLI\CLIMigrationService;
 use App\Services\Converters\CI3ConverterService;
 use App\Services\Coordinators\CI3MigrationCoordinatorService;
 use App\Services\Coordinators\CIMigrationCoordinatorService;
@@ -46,8 +47,8 @@ class ConverterServiceProvider extends ServiceProvider
         });
 
 
-        $this->app->bind(CodeIgniterMigrationService::class, function ($app) {
-            return new CodeIgniterMigrationService(
+        $this->app->bind(CLIMigrationService::class, function ($app) {
+            return new CLIMigrationService(
                 $app->make(PromptService::class),
                 $app->make(LogService::class),
                 $app->make(LaravelProjectSetupService::class),
