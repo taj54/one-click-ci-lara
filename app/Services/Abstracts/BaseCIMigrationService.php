@@ -1,28 +1,31 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Abstracts;
 
 use App\Enums\CIVersion;
 use App\Services\Coordinators\CIMigrationCoordinatorService;
 use App\Traits\HasDirectories;
+use App\Services\LaravelProjectSetupService;
+use App\Services\LogService;
+use App\Services\FileHandlerService;
 
-class CodeIgniterMigrationService
+abstract class BaseCIMigrationService
 {
     use HasDirectories;
 
-    private  $currentMigrationCoordinator;
+    protected ?string $injectedProjectName = null;
+    protected ?string $injectedLaravelVersion = null;
+    protected ?bool $injectedInstallSail = null;
+
+    protected CIMigrationCoordinatorService $currentMigrationCoordinator;
 
     public function __construct(
-        private PromptService $promptService,
-        private LogService $logService,
-        private LaravelProjectSetupService $laravelProjectSetupService,
-        private FileHandlerService $fileHandlerService,
-        private CIMigrationCoordinatorService $migrationCoordinator
+        protected LogService $logService,
+        protected LaravelProjectSetupService $laravelProjectSetupService,
+        protected FileHandlerService $fileHandlerService,
+        protected CIMigrationCoordinatorService $migrationCoordinator
     ) {}
 
-    /**
-     * Initiates the CodeIgniter to Laravel migration process.
-     */
     public function migrate(): bool
     {
         $version = $this->detectCodeIgniterVersion();
@@ -50,10 +53,7 @@ class CodeIgniterMigrationService
         return $this->handleMigrationReport($report);
     }
 
-    /**
-     * Detects the CodeIgniter version.
-     */
-    protected function detectCodeIgniterVersion(): CIVersion
+    public function detectCodeIgniterVersion(): CIVersion
     {
         $version = $this->getCodeIgniterVersion();
 
@@ -67,9 +67,6 @@ class CodeIgniterMigrationService
         return $version;
     }
 
-    /**
-     * Reads the CodeIgniter version based on the project file structure.
-     */
     protected function readVersionFromFile(): CIVersion
     {
         $core = $this->getCICoreDirectory();
@@ -94,28 +91,6 @@ class CodeIgniterMigrationService
         return CIVersion::UNKNOWN;
     }
 
-    /**
-     * Sets up a Laravel project based on user input.
-     */
-    protected function setupLaravelProject(): void
-    {
-        $projectName = $this->promptService->promptForProjectName();
-        $laravelVersion = $this->promptService->promptForLaravelVersion();
-        $installSail = $this->promptService->promptForSailInstall();
-
-        $this->logService->info("Selected Laravel Version: {$laravelVersion}");
-
-        $this->laravelProjectSetupService->setLaravelProjectName($projectName);
-        $this->laravelProjectSetupService->createAndSetupProject(
-            $projectName,
-            $laravelVersion,
-            $installSail
-        );
-    }
-
-    /**
-     * Processes the result of the migration report.
-     */
     protected function handleMigrationReport(array $report): bool
     {
         if (!empty($report['conversion']['success'])) {
@@ -128,4 +103,13 @@ class CodeIgniterMigrationService
 
         return false;
     }
+
+    public function setUserInputs(string $projectName, string $laravelVersion, bool $installSail): void
+    {
+        $this->injectedProjectName = $projectName;
+        $this->injectedLaravelVersion = $laravelVersion;
+        $this->injectedInstallSail = $installSail;
+    }
+
+    abstract protected function setupLaravelProject(): void;
 }

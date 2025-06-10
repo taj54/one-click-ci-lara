@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Services\CIMigrationService;
 use Illuminate\Console\Command;
-use App\Services\CodeIgniterMigrationService;
 use App\Services\FileHandlerService;
 use App\Services\LogService;
 use App\Services\StatusBarService;
@@ -25,7 +25,7 @@ class MigrateCodeIgniterApp extends Command
     protected $description = 'Migrates a CodeIgniter application to Laravel.';
 
     public function __construct(
-        protected CodeIgniterMigrationService $migrationService,
+        protected CIMigrationService $migrationService,
         protected FileHandlerService $fileHandlerService,
         protected LogService $logService
     ) {
@@ -37,12 +37,11 @@ class MigrateCodeIgniterApp extends Command
      */
     public function handle(): int
     {
-        $appPath = base_path();
-        $testEnvDirectory = realpath($appPath . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'test-environment'.DIRECTORY_SEPARATOR);
+
         $inputDirectory = rtrim($this->option('path'), DIRECTORY_SEPARATOR);
         $outputDirectory = rtrim($this->option('output-dir'), DIRECTORY_SEPARATOR);
         // Setup file handler
-        $this->setupFileHandler($testEnvDirectory, $inputDirectory, $outputDirectory);
+        $this->setupFileHandler($inputDirectory, $outputDirectory);
 
 
 
@@ -60,9 +59,11 @@ class MigrateCodeIgniterApp extends Command
     /**
      * Set up file handler service with environment and paths.
      */
-    protected function setupFileHandler(string $envDir, string $input, string $output): void
+    protected function setupFileHandler(string $input, string $output): void
     {
-        $this->fileHandlerService->setTestEnvDir($envDir);
+        $appPath = base_path();
+        $testEnvDirectory = realpath($appPath . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'test-environment' . DIRECTORY_SEPARATOR);
+        $this->fileHandlerService->setTestEnvDir($testEnvDirectory);
         $this->fileHandlerService->setInputDirectory($input);
         $this->fileHandlerService->setOutputDirectory($output);
         // Optionally pass CLI context to service (if needed)
