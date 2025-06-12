@@ -5,7 +5,6 @@ namespace App\Providers;
 use App\Contracts\CIAnalyzerInterface;
 use App\Contracts\CIConverterInterface;
 use App\Contracts\CIMigrationCoordinatorInterface;
-use App\Services\Abstracts\BaseCIMigrationService;
 use App\Services\Analyzers\CI3AnalyzerService;
 use App\Services\CLI\CLIMigrationService;
 use App\Services\Converters\CI3ConverterService;

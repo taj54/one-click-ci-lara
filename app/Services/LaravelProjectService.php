@@ -112,7 +112,7 @@ class LaravelProjectService
      */
     protected function runProcess(array $command, string $cwd, string $failureMessage, ?callable $onProgress = null, int $timeout = 60)
     {
-        $process = new Process($command, $cwd, null, null, $timeout);
+        $process = new Process($command, $cwd, ['PATH' => getenv('PATH') . ';' . env('PHP_PATH')], null, $timeout);
 
         $this->logService->comment("\nRunning command: " . implode(' ', $command) . " in directory: {$cwd}..");
 

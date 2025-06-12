@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\CIVersion;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CIMigrateRequest;
 use App\Services\API\APICIProjectPreparationService;
@@ -32,6 +33,13 @@ class APICIMigrationController extends Controller
             $this->fileHandlerService->setInputDirectory($result['projectPath']);
 
             $version = $this->migrationService->detectCodeIgniterVersion();
+
+            if($version === CIVersion::UNKNOWN) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to detect CodeIgniter version.',
+                ], 500);
+            }
 
             return response()->json([
                 'success' => true,
