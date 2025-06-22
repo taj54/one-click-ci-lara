@@ -2,7 +2,6 @@
 
 namespace App\Services\Parsers\NodeProcessors;
 
-use App\Contracts\NodeProcessorInterface;
 use App\Services\Parsers\AbstractParserVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
@@ -13,7 +12,7 @@ use PhpParser\Node\Stmt\ClassMethod;
  * Base route processor for CI controllers.
  */
 
-class CIRouteNodeProcessorBase  extends AbstractParserVisitor implements NodeProcessorInterface
+abstract class CIRouteNodeProcessorBase  extends AbstractParserVisitor
 {
     private string $controllerName = '';
     private array $routes = [];

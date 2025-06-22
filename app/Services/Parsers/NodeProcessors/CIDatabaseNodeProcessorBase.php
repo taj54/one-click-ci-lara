@@ -2,7 +2,6 @@
 
 namespace App\Services\Parsers\NodeProcessors;
 
-use App\Contracts\NodeProcessorInterface;
 use App\Services\Parsers\AbstractParserVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
@@ -10,7 +9,7 @@ use PhpParser\Node\Expr;
 /**
  * Processes nodes specifically for CodeIgniter's database.php structure.
  */
-class CIDatabaseNodeProcessorBase  extends AbstractParserVisitor implements NodeProcessorInterface
+abstract class CIDatabaseNodeProcessorBase  extends AbstractParserVisitor 
 {
     public array $dbConfig = [];
 

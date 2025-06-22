@@ -2,7 +2,6 @@
 
 namespace App\Services\Parsers\NodeProcessors;
 
-use App\Contracts\NodeProcessorInterface;
 use App\Services\Parsers\AbstractParserVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
@@ -10,7 +9,7 @@ use PhpParser\Node\Expr;
 /**
  * Base config processor shared by all CI versions.
  */
-class CIConfigNodeProcessorBase  extends AbstractParserVisitor implements NodeProcessorInterface
+abstract class CIConfigNodeProcessorBase  extends AbstractParserVisitor 
 {
     public array $ciConfig = [];
 

@@ -2,12 +2,13 @@
 
 namespace App\Services\Parsers;
 
+use App\Contracts\NodeProcessorInterface;
 use PhpParser\Node;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Expr;
 
-abstract class AbstractParserVisitor
+abstract class AbstractParserVisitor implements NodeProcessorInterface
 {
     /**
      * Recursively traverse nodes and apply a callback.

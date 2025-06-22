@@ -2,7 +2,6 @@
 
 namespace App\Services\Parsers\NodeProcessors;
 
-use App\Contracts\NodeProcessorInterface;
 use App\Services\Parsers\AbstractParserVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -10,7 +9,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\PrettyPrinter\Standard;
 
-abstract class CIModelNodeProcessorBase extends AbstractParserVisitor implements NodeProcessorInterface
+abstract class CIModelNodeProcessorBase extends AbstractParserVisitor 
 {
     protected string $className = '';
     protected string $parentClassName = '';

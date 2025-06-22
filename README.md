@@ -4,29 +4,29 @@ A command-line tool designed to automate the migration of CodeIgniter applicatio
 
 ## Table of Contents
 
-*   [Introduction](## Introduction)
+* [Introduction](#Introduction)
     
-*   [Features]()
+* [Features](#Features)
     
-*   [Limitations]()
+* [Limitations](#Limitations)
     
-*   [Requirements]()
+* [Requirements](#Requirements)
     
-*   [Installation]()
+* [Installation](#Installation)
     
-*   [Usage]()
+* [Usage](#Usage)
     
-*   [Configuration]()
+* [Configuration](#Configuration)
     
-*   [Troubleshooting]()
+* [Troubleshooting](#Troubleshooting)
     
-*   [Future Scope]()
+* [Future Scope](#Future-Scope)
     
-*   [Contributing]()
+* [Contributing](#Contributing)
     
-*   [License]()
+* [License](#License)
     
-*   [Credits]()
+* [Credits](#Credits)
     
 
 ## Introduction
