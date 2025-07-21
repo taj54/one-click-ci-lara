@@ -4,29 +4,26 @@ A command-line tool designed to automate the migration of CodeIgniter applicatio
 
 ## Table of Contents
 
-* [Introduction](#Introduction)
-    
-* [Features](#Features)
-    
-* [Limitations](#Limitations)
-    
-* [Requirements](#Requirements)
-    
-* [Installation](#Installation)
-    
-* [Usage](#Usage)
-    
-* [Configuration](#Configuration)
-    
-* [Troubleshooting](#Troubleshooting)
-    
-* [Future Scope](#Future-Scope)
-    
-* [Contributing](#Contributing)
-    
-* [License](#License)
-    
-* [Credits](#Credits)
+- [CodeIgniter to Laravel Migration Tool](#codeigniter-to-laravel-migration-tool)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Features](#features)
+  - [Limitations](#limitations)
+  - [Requirements](#requirements)
+    - [For the Migration Tool:](#for-the-migration-tool)
+    - [For the Source CodeIgniter Project:](#for-the-source-codeigniter-project)
+    - [For the Target Laravel Project:](#for-the-target-laravel-project)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Usage](#usage-1)
+  - [Configuration](#configuration)
+  - [Troubleshooting](#troubleshooting)
+    - [Common Issues](#common-issues)
+    - [Bug Reports](#bug-reports)
+  - [Future Scope](#future-scope)
+  - [Contributing](#contributing)
+  - [License](#license)
+  - [Credits](#credits)
     
 
 ## Introduction
@@ -180,7 +177,7 @@ Contributions are welcome! If you'd like to contribute, please follow these guid
 
 ## License
 
-The CodeIgniter to Laravel Migration Tool is released under the MIT License.
+The CodeIgniter to Laravel Migration Tool is released under the [`MIT License`](LICENSE).
 
 ## Credits
 
