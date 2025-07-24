@@ -14,12 +14,31 @@ use Illuminate\Http\JsonResponse;
 
 class APICIMigrationController extends Controller
 {
+    /**
+     * APICIMigrationController constructor.
+     *
+     * @param APIMigrationService $migrationService
+     * @param APICIProjectPreparationService $preparationService
+     * @param FileHandlerService $fileHandlerService
+     */
     public function __construct(
         private APIMigrationService $migrationService,
         private APICIProjectPreparationService $preparationService,
         private FileHandlerService $fileHandlerService
     ) {}
 
+    /**
+     * Handles the upload of a CodeIgniter project ZIP file, extracts its contents,
+     * and detects the CodeIgniter version.
+     *
+     * Validates the uploaded file to ensure it is a ZIP archive and within the size limit.
+     * Extracts the ZIP file, sets the input directory for further processing, and attempts
+     * to detect the CodeIgniter version using the migration service.
+     *
+     * @param  \Illuminate\Http\Request  $request  The incoming HTTP request containing the ZIP file.
+     * @return \Illuminate\Http\JsonResponse       JSON response indicating success or failure,
+     *                                             including detected version information if successful.
+     */
     public function uploadAndDetectVersion(Request $request): JsonResponse
     {
         $request->validate([
@@ -56,6 +75,15 @@ class APICIMigrationController extends Controller
         }
     }
 
+    /**
+     * Starts the migration process for a CodeIgniter project to Laravel.
+     *
+     * Validates the request, checks the project directory, sets up file handlers,
+     * and invokes the migration service. Returns a JSON response with the migration report.
+     *
+     * @param  CIMigrateRequest  $request  The validated migration request.
+     * @return \Illuminate\Http\JsonResponse       JSON response with migration status and report.
+     */
     public function startMigration(CIMigrateRequest $request) //: JsonResponse
     {
         $validated = $request->validated();
@@ -104,8 +132,16 @@ class APICIMigrationController extends Controller
             ], 500);
         }
     }
+
     /**
      * Set up file handler service with environment and paths.
+     *
+     * Configures the file handler service with the test environment directory,
+     * input directory, and output directory for migration.
+     *
+     * @param string $input   Path to the input (CodeIgniter) project directory.
+     * @param string $output  Path to the output (Laravel) project directory.
+     * @return void
      */
     protected function setupFileHandler(string $input, string $output): void
     {
@@ -117,6 +153,14 @@ class APICIMigrationController extends Controller
         // Optionally pass CLI context to service (if needed)
         // $this->fileHandlerService->setConsole($this);
     }
+
+    /**
+     * Validates the input and output directories for migration.
+     *
+     * Checks if the input directory is not empty, paths are valid, and output directory can be created.
+     *
+     * @return bool True if all directory checks pass, false otherwise.
+     */
     protected function validateDirectories(): bool
     {
         return $this->fileHandlerService->emptyCheckInputDirectory()
